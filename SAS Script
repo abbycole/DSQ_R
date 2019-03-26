@@ -54,7 +54,7 @@ run;
 
 data dtq;
 
-  set yourdata;
+  set yourdata;  	//Reads data from one dataset, creates a new variable for dtq, and then creates a new dataset.
 
 
 
@@ -128,7 +128,7 @@ data dtq;
 
 */
 
-
+//cereal_fc =. means that the variable is empty
 
   if cereal1fc=. and cereal2fc=. then numcer=0;
 
@@ -141,11 +141,10 @@ data dtq;
 
 
 /*converting responses into times per day for food variables of interest;
-
 */
 
 
-
+//macro - functions exactly like methods in python/java
  %macro foodrange (in,out,maxv); 
 
  if &in='A' then &out=0; //in - frequency of how often participant ate said food, out is the conversation to daily frequency
@@ -170,7 +169,7 @@ data dtq;
 
    if &out > &maxv then &out=&maxv;    //If person ate above the accepted frequency value, set out equal to the max value.
 
-%mend foodrange;
+%mend foodrange; 	//end of the macro statement, can now be referenced throughout the code
 
 
 
@@ -278,7 +277,7 @@ data dtq;
 	icecrmxpd='number of times per day eat ice cream'
 	popcornxpd='number of times per day eat pop corn';
 
-   if (2 <= ageinyr <= 3) then bcage=1;       //What's bcage?
+   if (2 <= ageinyr <= 3) then bcage=1;       //bcage: new variable of the different groups based on age range
     else if (4 <= ageinyr <= 5) then bcage=2;
     else if (6 <= ageinyr <= 7) then bcage=3;
     else if (8 <= ageinyr <= 9) then bcage=4;
@@ -306,19 +305,20 @@ data ntile;
   set ntile.'CALIB.DSQ.CEREAL.NTILE'n; //Set ntile to data from Excel sheet
 run;	 	 
 
-proc sort data=ntile; //Sort the variable ntile by food_codes
+proc sort data=ntile; //Sort the variable ntile by food_codes (isn't it already sorted?)
   by food_code;
 run;
 
 data ntile (keep=cereal1fc cereal2fc whgnt sugnt calcnt fibnt); //wheat, sugar, calcium, fiber?
+								//Only read those specific variables for processing
   set ntile;
-  by food_code;
-  if first.food_code;
+  by food_code; 		//organizes by food_code (with the four variables kept in mind)
+  if first.food_code;		//No call to action?
   cereal1fc=food_code;
   cereal2fc=food_code;
 run;
   
-proc sort data=dtq;
+proc sort data=dtq; 	//Organizes dataset and ntile by first cereal selection
   by cereal1fc;
 run;
 
@@ -326,10 +326,10 @@ proc sort data=ntile;
   by cereal1fc;
 run;
 
-data dtq (drop= whgnt sugnt calcnt fibnt);
+data dtq (drop= whgnt sugnt calcnt fibnt); //don't count those variables
   merge dtq (in=d) ntile (drop=cereal2fc);
-  by cereal1fc;
-  if d;
+  by cereal1fc; //merging the two datasets by cereal1fc
+  if d; //no call to action? d wasn't assigned anything
 
   c1whgnt=whgnt;
   c1sugnt=sugnt;
@@ -337,6 +337,8 @@ data dtq (drop= whgnt sugnt calcnt fibnt);
   c1fibnt=fibnt;
 run;
 
+
+//Repeating the process for cereal two (could probably make a macro/mend for these two sections)
 proc sort data=dtq;
   by cereal2fc;
 run;
@@ -359,14 +361,16 @@ run;
 data dtq;
   set dtq;
 
-  if numcer in (0,1,2) and hccerxpd >= 0 then do;
-   wg1f=0; wg2f=0; wg3f=0; 
-   as1f=0; as2f=0; as3f=0;
-   cm1f=0; cm2f=0; cm3f=0; 
-   fb1f=0; fb2f=0; fb3f=0;
-  if numcer=1 then do;
-    if c1whgnt=1 then wg1f=wg1f+hccerxpd;
-      else if c1whgnt=2 then wg2f=wg2f+hccerxpd;
+  if numcer in (0,1,2) and hccerxpd >= 0 then do; //If they entered in cereal and ate it at least once a day:
+   wg1f=0; wg2f=0; wg3f=0; //wheat
+   as1f=0; as2f=0; as3f=0; // (?)
+   cm1f=0; cm2f=0; cm3f=0; // (?)
+   fb1f=0; fb2f=0; fb3f=0; //fiber
+   
+  if numcer=1 then do; //If they only reported one cereal:
+  
+    if c1whgnt=1 then wg1f=wg1f+hccerxpd;		//What is this actually recording?
+      else if c1whgnt=2 then wg2f=wg2f+hccerxpd; 	//Adds itself to the number of times the cereal was eaten in a day
       else if c1whgnt=3 then wg3f=wg3f+hccerxpd;
     if c1sugnt=1 then as1f=as1f+hccerxpd;
       else if c1sugnt=2 then as2f=as2f+hccerxpd;
@@ -378,8 +382,9 @@ data dtq;
       else if c1fibnt=2 then fb2f=fb2f+hccerxpd;
       else if c1fibnt=3 then fb3f=fb3f+hccerxpd;;
    end;
-   else if numcer=2 then do;
-    if c1whgnt=1 then wg1f=wg1f+(.75*hccerxpd);
+   
+   else if numcer=2 then do; //Have to calculate cereal1 and cereal2
+    if c1whgnt=1 then wg1f=wg1f+(.75*hccerxpd);		//Why .75 and .25?
       else if c1whgnt=2 then wg2f=wg2f+(.75*hccerxpd);
       else if c1whgnt=3 then wg3f=wg3f+(.75*hccerxpd);
     if c2whgnt=1 then wg1f=wg1f+(.25*hccerxpd);
@@ -407,12 +412,12 @@ data dtq;
    end;
 run;
 
-proc sort data=dtq;
+proc sort data=dtq; //resort the data by gender and age categories (in that order)
   by gender bcage;
 run;
 
 *this pulls in the portion size adjustment information by gender and agegrp;
-data adjps;
+data adjps; //
   set psize.'CALIB.PORTION.SIZE'n;
   bcage=agegrp;
 run;
