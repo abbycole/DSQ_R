@@ -361,10 +361,10 @@ run;
 data dtq;
   set dtq;
 
-  if numcer in (0,1,2) and hccerxpd >= 0 then do; //If they entered in cereal and ate it at least once a day:
+  if numcer in (0,1,2) and hccerxpd >= 0 then do; 
    wg1f=0; wg2f=0; wg3f=0; //wheat
-   as1f=0; as2f=0; as3f=0; // (?)
-   cm1f=0; cm2f=0; cm3f=0; // (?)
+   as1f=0; as2f=0; as3f=0; //sugar
+   cm1f=0; cm2f=0; cm3f=0; //calcium
    fb1f=0; fb2f=0; fb3f=0; //fiber
    
   if numcer=1 then do; //If they only reported one cereal:
