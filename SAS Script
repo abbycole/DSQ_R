@@ -384,7 +384,7 @@ data dtq;
    end;
    
    else if numcer=2 then do; //Have to calculate cereal1 and cereal2
-    if c1whgnt=1 then wg1f=wg1f+(.75*hccerxpd);		//Why .75 and .25?
+    if c1whgnt=1 then wg1f=wg1f+(.75*hccerxpd);		//Weight of cereal1 and cereal2 - maybe 1 is eaten more frequently than 2?
       else if c1whgnt=2 then wg2f=wg2f+(.75*hccerxpd);
       else if c1whgnt=3 then wg3f=wg3f+(.75*hccerxpd);
     if c2whgnt=1 then wg1f=wg1f+(.25*hccerxpd);
@@ -423,7 +423,7 @@ data adjps; //
 run;
 	 
 
-proc sort data=adjps;
+proc sort data=adjps; //organizes the adjusted portion size by gender and age category
   by gender bcage;
 run;
 
